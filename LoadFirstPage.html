@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Cargar la primer página d eun archivo PDF</title>
+        
+        <style>
+            #the-canvas {
+                border: 1px solid black;
+                direction: ltr;
+            }
+        </style>
+
+        <script src="//mozilla.github.io/pdf.js/build/pdf.js"></script>
+    </head>
+    <body>
+        <h1>Cargando la primera página de un archivo PDF con PDF.js</h1>
+        <canvas id="the-canvas"></canvas>
+
+        <script>
+            //Get the path of the pdf
+            var url = 'https://raw.githubusercontent.com/mozilla/pdf.js/ba2edeae/web/compressed.tracemonkey-pldi-09.pdf';
+
+            // Loaded via <script> tag, create shortcut to access PDF.js exports.
+            var pdfjsLib = window['pdfjs-dist/build/pdf'];
+
+            // The workerSrc property shall be specified.
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://mozilla.github.io/pdf.js/build/pdf.worker.js';
+
+            //Variables for PDF.js
+            var pdfDoc = null;
+            var scale = 1;
+            var canvas = document.getElementById('the-canvas');
+            var context = canvas.getContext('2d');
+
+            //function for get the pdf
+            pdfjsLib.getDocument(url).promise.then(function (pdfDoc_) {
+                pdfDoc = pdfDoc_;
+
+                for(var i = 1; i <= pdfDoc.numPages; i++) {
+                    RenderPage(i);
+                }
+            });
+
+            //Function for render page in the canvas
+            function RenderPage(num){
+                // Using promise to fetch the page
+                pdfDoc.getPage(num).then(function (page) {
+                    var viewport = page.getViewport({ scale: scale });
+                    //set canvas size
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+
+                    //render PDF page into canvas context
+                    var renderContext = {
+                        canvasContext: context,
+                        viewport: viewport
+                    }
+
+                    var renderTask = page.render(renderContext);
+                    renderTask.promise.then(function (){
+                        console.log('Page rendered');
+                    });
+                });
+            }
+
+        </script>
+    </body>
+</html>
